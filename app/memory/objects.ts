@@ -16,14 +16,14 @@ export class EmailMockClient {
 
   constructor() {}
 
-  sendEmail = async (sentEmail: SentEmail) => {
+  sendEmails = async (sentEmails: SentEmail[]) => {
     // update memory with new email
     let emails: Array<SentEmail> = []
     const cookieValue = (await cookies()).get('emails')?.value
     if (cookieValue) {
       emails = JSON.parse(cookieValue)
     }
-    emails.push(sentEmail)
+    emails = emails.concat(sentEmails)
     const cookieStore = await cookies()
     cookieStore.set('emails', JSON.stringify(emails))
     return
