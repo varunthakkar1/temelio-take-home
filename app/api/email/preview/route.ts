@@ -1,15 +1,13 @@
 import { NonProfit } from "@/app/memory/objects";
 import { cookies } from "next/headers";
 
-type PreviewEmailRequest = Request & {
-  body: { email: string; template: string };
-};
+type RequestBody = { email: string; template: string };
 
 /**
  * @swagger
  * /api/email/preview:
  *   post:
- *     description: Previews a templated email to a given nonprofit
+ *     description: Previews a templated email to a given nonprofit. Will NOT send the email
  *     requestBody:
  *       required: true
  *       content:
@@ -29,17 +27,18 @@ type PreviewEmailRequest = Request & {
  *       400:
  *         description: Email does not exist
  */
-export async function POST(request: PreviewEmailRequest) {
+export async function POST(request: Request) {
   const cookieValue = (await cookies()).get("nonprofits")?.value;
   let nonprofits = [];
   if (cookieValue) {
     nonprofits = JSON.parse(cookieValue);
   }
-  const body = await request.json();
+  const body = (await request.json()) as RequestBody;
   const nonprofit = nonprofits.find((n: NonProfit) => n.email === body.email);
   if (!nonprofit) {
     return Response.json({ error: "Email does not exist" }, { status: 400 });
   } else {
+    // Returns what email will look like but does not send email
     const filledInTemplate = body.template
       .replace("{ name }", nonprofit.name)
       .replace("{ address }", nonprofit.address);

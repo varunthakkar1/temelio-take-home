@@ -1,8 +1,6 @@
 import { NonProfit } from "@/app/memory/objects";
 import { cookies } from "next/headers";
 
-type AddNonProfitRequest = Request;
-
 /**
  * @swagger
  * /api/nonprofit/add:
@@ -27,19 +25,25 @@ type AddNonProfitRequest = Request;
  *       400:
  *         description: Email already in use
  */
-export async function POST(request: AddNonProfitRequest) {
+export async function POST(request: Request) {
   console.log("Adding nonprofit");
+
+  // Retrieve current nonprofits from storage
   const cookieValue = (await cookies()).get('nonprofits')?.value
   let nonprofits = []
   if (cookieValue) {
     nonprofits = JSON.parse(cookieValue)
   }
-  const newNonProfit = await request.json();
+  const newNonProfit = await request.json() as NonProfit;
+
+  // Add new nonprofit
   const emailExists = nonprofits?.find((n: NonProfit) => n.email === newNonProfit.email);
   if (emailExists) {
     return Response.json({ error: "Email already in use" }, { status: 400 });
   } else {
     nonprofits.push(newNonProfit);
+
+    // Save to local memory
     (await cookies()).set('nonprofits', JSON.stringify(nonprofits))
     return Response.json({ message: "Success!", email: newNonProfit.email }, { status: 200 });
   }
